@@ -2,6 +2,6 @@
 
 **Changed**
 * Created this repo.
-* Create a small Proof-Of-Concept example shell script
+* Created a Proof-Of-Concept example shell script.
 
 
