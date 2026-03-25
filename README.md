@@ -9,6 +9,7 @@ sebastien.renaut.hsj@ssss.gouv.qc.ca
 * `samtools`, `isoseq`, `pigeon`, `pbmm2`
 
 ### Usage
-* Currently: `./scripts/poc.sh`  
+* Currently: `./scripts/rnaquant.slurm`  
+
 
 ### Citations  
