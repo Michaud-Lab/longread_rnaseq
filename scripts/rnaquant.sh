@@ -12,13 +12,13 @@ mkdir -p $resultpath
 #samtools view -h "$lrpath"1_A01/hifi_reads/m84196_260317_144727_s1.hifi_reads.bcM0001.bam | head -n 600000 | samtools view -b -o "$lrpath"test_data/hifi_reads/test.hifi_reads.bcM0001.bam
 
 #1. Generate segmented reads
-skera split -j $cpu "$lrpath"1_A01/hifi_reads/m84196_260317_144727_s1.hifi_reads.bcM0001.bam "$lrpath"/reference/mas8_primers.fasta "$resultpath"segmented.bam
+#skera split -j $cpu "$lrpath"1_A01/hifi_reads/m84196_260317_144727_s1.hifi_reads.bcM0001.bam "$lrpath"/reference/mas8_primers.fasta "$resultpath"segmented.bam
 
 #2. Primer removal and demux
-lima -j $cpu "$resultpath"segmented.bam "$lrpath"/reference/IsoSeq_v2_primers_12.fasta "$resultpath"movieX.fl.bam --isoseq --peek-guess
+#lima -j $cpu "$resultpath"segmented.bam "$lrpath"/reference/IsoSeq_v2_primers_12.fasta "$resultpath"movieX.fl.bam --isoseq --peek-guess
 
-
-samples=$(ls "$resultpath"/movieX.fl.IsoSeqX_bc*bam)
+#
+samples=$(ls "$resultpath"movieX.fl.IsoSeqX_bc*bam)
 
 for s in $samples
   do
@@ -44,7 +44,7 @@ for s in $samples
     pbmm2 align -j $cpu --preset ISOSEQ --sort "$samp_dir"/transcripts.bam "$ref_genome" "$samp_dir"/mapped.bam
 
     #7. Collapse into single isoforms
-    isoseq collapse --do-not-collapse-extra-5exons "$samp_dir"/mapped.bam "$samp_dir"/movieX.flnc.bam "$samp_dir"/collapsed.gff
+    isoseq collapse "$samp_dir"/mapped.bam "$samp_dir"/movieX.flnc.bam "$samp_dir"/collapsed.gff
 
     #8. Prepare reference files for pigeon (create a sorted gtf)
     pigeon prepare "$gtf" "$ref_genome"
@@ -52,7 +52,7 @@ for s in $samples
 
     #9. Classify isoforms
     pigeon classify -j $cpu "$samp_dir"/collapsed.sorted.gff "$gtf_c" "$ref_genome"  --fl "$samp_dir"/collapsed.flnc_count.txt  -d "$samp_dir" #add count data outputted from isoseq collapse
-    pigeon filter -j $cpu "$samp_dir"/collapsed_classification.txt --isoforms "$samp_dir"/collapsed.sorted.gff # filter .gff
+    pigeon filter -j $cpu --max-distance 500 "$samp_dir"/collapsed_classification.txt --isoforms "$samp_dir"/collapsed.sorted.gff # filter .gff
 
     # 11. Gene saturation to check if you sequenced enough
     pigeon report --exclude-singletons "$samp_dir"/collapsed_classification.filtered_lite_classification.txt "$samp_dir"/saturation.txt
