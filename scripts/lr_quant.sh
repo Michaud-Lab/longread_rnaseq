@@ -5,6 +5,8 @@ ref_genome="/home/renaut/scratch/reference/Homo_sapiens/Homo_sapiensChr.GRCh38.d
 gtf="/home/renaut/scratch/reference/Human_hg38_Gencode_v39//gencode.v39.annotation.gtf"
 gtf_c="/home/renaut/scratch/reference/Human_hg38_Gencode_v39//gencode.v39.annotation.sorted.gtf"
 cpu=$1
+rnasplice_bamdir="$HOME/scratch/raredisease_rnaseq/results_06_01_2026/star_salmon/long_read/"
+
 
 mkdir -p $resultpath
 
@@ -34,16 +36,19 @@ for s in $samples
     #3b. Merge SMART cells (if necessary)
     #`ls movie*.flnc.bam movie*.flnc.bam movie*.flnc.bam > flnc.fofn`
 
-    #4. Cluster isoforms (CPU intense ? akin to a de novo assembly)
+    #4. Cluster isoforms
     isoseq cluster2 -j $cpu "$samp_dir"/movieX.flnc.bam "$samp_dir"/transcripts.bam
 
     #5. Check sequences (generate a .fastq)
-    samtools fastq "$samp_dir"/transcripts.bam >"$samp_dir"/transcripts.fastq.gz
+    #samtools fastq "$samp_dir"/transcripts.bam >"$samp_dir"/transcripts.fastq.gz
 
-    #6. ppmm2: map reads to human genome
+    #6a. ppmm2: map clustered reads to human genome
     pbmm2 align -j $cpu --preset ISOSEQ --sort "$samp_dir"/transcripts.bam "$ref_genome" "$samp_dir"/mapped.bam
 
-    #7. Collapse into single isoforms
+    #6b. ppmm2: map ALL reads to human genome (I need this for FRASER)
+    pbmm2 align -j $cpu --preset ISOSEQ --sort "$samp_dir"/movieX.flnc.bam "$ref_genome" "rnasplice_bamdir"/"$bc"_sorted.bam 
+
+    #7. Collapse into single isoforms (gff contains the sequence annotation. collapsed.flnc_count.txt contains the count of each unique sequence) 
     isoseq collapse "$samp_dir"/mapped.bam "$samp_dir"/movieX.flnc.bam "$samp_dir"/collapsed.gff
 
     #8. Prepare reference files for pigeon (create a sorted gtf)
@@ -59,3 +64,5 @@ for s in $samples
 
     echo "DONE sample ~~~ ""$bc"
   done
+
+
